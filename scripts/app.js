@@ -9,12 +9,11 @@ class Hero extends React.Component {
           <div className="container">
             <h1 className="title">Hoteles</h1>
             <h2 className="subtitle">
-              desde el <strong>{new Date(this.props.filters.dateFrom).toLocaleDateString()}</strong> hasta el{" "}
-              <strong>{new Date(this.props.filters.dateTo).toLocaleDateString()}</strong>
-              {this.props.filters.country &&
-                this.props.filters.price > 0 &&
-                this.props.filters.rooms > 0 &&
-                ` en ${this.props.filters.country} por $${this.props.filters.price} de hasta ${this.props.filters.rooms} habitaciones`}
+              desde el <strong>{this.props.filters.dateFrom}</strong> hasta el{" "}
+              <strong>{this.props.filters.dateTo}</strong>
+              {`${this.props.filters.country ? ` en ${this.props.filters.country}` : ""}`}
+              {`${this.props.filters.price > 0 ? ` por $${this.props.filters.price}` : ""}`}
+              {`${this.props.filters.rooms > 0 ? ` de hasta ${this.props.filters.rooms} habitaciones` : ""}`}
             </h2>
           </div>
         </div>
@@ -44,7 +43,6 @@ class DateFilter extends React.Component {
 
     return [year, month, day].join("-");
   }
-
   render() {
     return (
       <div className="field">
@@ -53,7 +51,7 @@ class DateFilter extends React.Component {
             className="input"
             type="date"
             onChange={this.handleDateChange}
-            value={this.props.date}
+            value={this.formatDate(this.props.date)}
             name={this.props.name}
           />
           <span className="icon is-small is-left">
@@ -72,7 +70,6 @@ class OptionsFilter extends React.Component {
   }
 
   handlerOptionsFilterChange(event) {
-    debugger;
     this.props.onOptionChange(event);
   }
 
@@ -108,10 +105,8 @@ class Filters extends React.Component {
     this.handleOptionChange = this.handleOptionChange.bind(this);
   }
   handleOptionChange(event) {
-    debugger;
     let payload = this.props.filters;
     payload[event.target.name] = event.target.value;
-
     this.props.onFilterChange(payload);
   }
 
@@ -137,7 +132,7 @@ class Filters extends React.Component {
         <div className="navbar-item">
           <OptionsFilter
             options={[
-              { value: undefined, name: "Todos los países" },
+              { value: "", name: "Todos los países" },
               { value: "Argentina", name: "Argentina" },
               { value: "Brasil", name: "Brasil" },
               { value: "Chile", name: "Chile" },
@@ -152,7 +147,7 @@ class Filters extends React.Component {
         <div className="navbar-item">
           <OptionsFilter
             options={[
-              { value: undefined, name: "Cualquier precio" },
+              { value: "", name: "Cualquier precio" },
               { value: 1, name: "$" },
               { value: 2, name: "$$" },
               { value: 3, name: "$$$" },
@@ -167,7 +162,7 @@ class Filters extends React.Component {
         <div className="navbar-item">
           <OptionsFilter
             options={[
-              { value: undefined, name: "Cualquier tamaño" },
+              { value: "", name: "Cualquier tamaño" },
               { value: 10, name: "Hotel pequeño" },
               { value: 20, name: "Hotel mediano" },
               { value: 30, name: "Hotel grande" },
@@ -247,15 +242,24 @@ class Hotels extends React.Component {
     super(props);
   }
   render() {
+    console.log(this.props.hotel);
     return (
       <section className="section" style={{ marginTop: "3em" }}>
         <div className="container">
           <div className="columns is-multiline">
-            {this.props.hotel.map((data) => (
-              <div className="column is-one-third">
-                <Hotel data={data} />
-              </div>
-            ))}
+            {this.props.hotel.length > 0 ? (
+              this.props.hotel.map((data) => (
+                <div className="column is-one-third">
+                  <Hotel data={data} />
+                </div>
+              ))
+            ) : (
+              <article className="message is-warning">
+                <div className="message-body">
+                  No se han encontrado hoteles que coincidan con los parámetros de búsqueda.
+                </div>
+              </article>
+            )}
           </div>
         </div>
       </section>
@@ -268,8 +272,8 @@ class App extends React.Component {
     super(props);
     this.state = {
       filters: {
-        dateFrom: today, // Proviene del archivo data.js
-        dateTo: new Date(today.valueOf() + 86400000),
+        dateFrom: today.toLocaleDateString(), // Proviene del archivo data.js
+        dateTo: new Date(today.valueOf() + 86400000).toLocaleDateString(),
         country: undefined,
         price: undefined,
         rooms: undefined,
@@ -280,19 +284,23 @@ class App extends React.Component {
   }
 
   handleFilterChange(payload) {
-    debugger;
-    this.setState({
+    this.setState((state) => ({
       filters: payload,
-      hotels: hotelsData.filter(
-        (hotel) =>
-          hotel.country === payload.country ||
-          hotel.price === parseInt(payload.price) ||
-          hotel.rooms === parseInt(payload.rooms)
-      ),
-    });
+      hotels:
+        !payload.country && !payload.price && !payload.rooms
+          ? hotelsData
+          : hotelsData.filter(
+              (hotel) =>
+                hotel.country === payload.country ||
+                hotel.price === parseInt(payload.price) ||
+                hotel.rooms === parseInt(payload.rooms)
+            ),
+      property1: payload[payload],
+    }));
   }
 
   render() {
+    console.log(this.state);
     return (
       <div>
         <Hero filters={this.state.filters}></Hero>
