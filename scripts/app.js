@@ -242,7 +242,6 @@ class Hotels extends React.Component {
     super(props);
   }
   render() {
-    console.log(this.props.hotel);
     return (
       <section className="section" style={{ marginTop: "3em" }}>
         <div className="container">
@@ -283,19 +282,42 @@ class App extends React.Component {
     this.handleFilterChange = this.handleFilterChange.bind(this);
   }
 
+  handleFilters(payload) {
+    let dataFiltered;
+    if (payload.country && !(payload.price && payload.rooms)) {
+      dataFiltered = hotelsData.filter((hotel) => hotel.country === payload.country);
+    }
+    if (payload.price && !(payload.country && payload.rooms)) {
+      dataFiltered = hotelsData.filter((hotel) => hotel.price === parseInt(payload.price));
+    }
+    if (payload.rooms && !(payload.country && payload.price)) {
+      dataFiltered = hotelsData.filter((hotel) => hotel.rooms === parseInt(payload.rooms));
+    }
+    if (payload.price && payload.country) {
+      dataFiltered = this.setState((state) => ({
+        hotels: state.hotels.filter(
+          (hotel) => hotel.country === payload.country && hotel.price === parseInt(payload.price)
+        ),
+      }));
+    }
+    if (payload.price && payload.country && payload.rooms) {
+      dataFiltered = this.setState((state) => ({
+        hotels: state.hotels.filter(
+          (hotel) =>
+            hotel.country === payload.country &&
+            hotel.price === parseInt(payload.price) &&
+            hotel.rooms === parseInt(payload.rooms)
+        ),
+      }));
+    }
+    return dataFiltered;
+  }
+
   handleFilterChange(payload) {
     this.setState((state) => ({
       filters: payload,
-      hotels:
-        !payload.country && !payload.price && !payload.rooms
-          ? hotelsData
-          : hotelsData.filter(
-              (hotel) =>
-                hotel.country === payload.country ||
-                hotel.price === parseInt(payload.price) ||
-                hotel.rooms === parseInt(payload.rooms)
-            ),
-      property1: payload[payload],
+      hotels: this.handleFilters(payload) || hotelsData,
+      property1: payload,
     }));
   }
 
